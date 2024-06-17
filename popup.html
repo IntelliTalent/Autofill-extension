@@ -35,21 +35,8 @@
 </head>
 <body>
     <h1>Form Autofill</h1>
-    <button id="autofill">Autofill Form</button>
+    <button id="approve">Approve Autofill</button>
     <div id="status" class="status"></div>
-
-    <script>
-        document.getElementById('autofill').addEventListener('click', () => {
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id, { type: 'triggerAutofill' });
-            });
-        });
-
-        chrome.runtime.onMessage.addListener((message) => {
-            if (message.type === 'autofillStatus') {
-                document.getElementById('status').innerText = message.status;
-            }
-        });
-    </script>
+    <script src="popup.js"></script>
 </body>
 </html>

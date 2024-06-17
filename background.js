@@ -1,5 +1,5 @@
 // background.js
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1vaGFtZWRuYWJpbGFjLmNvbSIsImlkIjoiMzc...';
+const token = 'your-token-here';
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'formDetected') {
@@ -17,9 +17,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           'Authorization': `Bearer ${token}`
         }
       })
-      .then(response => {
-        return response.json();
-      })
+      .then(response => response.json())
       .then(data => {
         console.log('Data:', data);
         return { form, formFields: data.formFields };
@@ -32,7 +30,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     // Wait for all fetch calls to complete
     Promise.all(fetchPromises).then(forms => {
-      chrome.tabs.sendMessage(sender.tab.id, { type: 'fillForm', data: forms });
+      // Store the fetched data in chrome storage for later use
+      chrome.storage.local.set({ formData: forms }, () => {
+        console.log('Stored form data:', forms);
+      });
     });
   }
 });
