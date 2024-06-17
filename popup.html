@@ -1,42 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Autofill Extension</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            width: 200px;
-            padding: 10px;
-        }
-        h1 {
-            font-size: 16px;
-        }
-        button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .status {
-            margin-top: 10px;
-            font-size: 14px;
-            color: green;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Autofill Extension</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 200px;
+      padding: 10px;
+    }
+    h1 {
+      font-size: 16px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: green;
+    }
+    #update {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-    <h1>Form Autofill</h1>
-    <button id="approve">Approve Autofill</button>
-    <div id="status" class="status"></div>
-    <script src="popup.js"></script>
+  <h1>Form Autofill</h1>
+  <button id="approve">Approve Autofill</button>
+  <button id="update">Update Form Fields</button>
+  <div id="status" class="status"></div>
+  <script src="popup.js"></script>
 </body>
 </html>

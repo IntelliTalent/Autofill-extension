@@ -1,4 +1,3 @@
-// background.js
 const token = 'your-token-here';
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -33,6 +32,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // Store the fetched data in chrome storage for later use
       chrome.storage.local.set({ formData: forms }, () => {
         console.log('Stored form data:', forms);
+      });
+    });
+  } else if (message.type === 'formChanged') {
+    // Retrieve the updated fields from storage
+    chrome.storage.local.get(['updatedFields'], (result) => {
+      const updatedFields = result.updatedFields;
+      const body = {
+        data: updatedFields
+      };
+
+      // Send the updated fields to the backend service
+      fetch('https://run.mocky.io/v3/15aceca3-aaf0-4c3b-81c5-213f385d5d08', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Updated successfully:', data);
+      })
+      .catch(error => {
+        console.error('Error updating fields:', error);
       });
     });
   }

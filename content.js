@@ -1,4 +1,5 @@
 let formFilled = false;
+let initialFormData = {};
 
 // Function to detect and parse forms
 function detectAndParseForms() {
@@ -11,7 +12,7 @@ function detectAndParseForms() {
 
     inputs.forEach(input => {
       const name = input.name || input.id;
-      formFields[name] = '';
+      formFields[name] = input.value || '';
     });
 
     formData.push({ form, formFields });
@@ -24,6 +25,7 @@ function detectAndParseForms() {
 // Function to fill the forms with data
 function fillForms(formData, data) {
   formFilled = true;
+  initialFormData = data;
   console.log('Filling forms with data:', data);
   formData.forEach((formObj, idx) => {
     const { form, formFields } = formObj;
@@ -72,10 +74,56 @@ function removePreview(formData) {
   }
 }
 
+// Function to handle form submission
+function handleFormSubmit(event) {
+  event.preventDefault(); // Prevent default form submission
+  const form = event.target;
+  const formData = new FormData(form);
+  let submittedData = {};
+
+  formData.forEach((value, key) => {
+    submittedData[key] = value;
+  });
+
+  chrome.storage.local.get(['formData'], (result) => {
+    const initialData = result.formData;
+    let changed = false;
+    let updatedFields = {};
+
+    initialData.forEach((formObj, idx) => {
+      for (const key in formObj.formFields) {
+        if (submittedData[key] && submittedData[key] !== formObj.formFields[key]) {
+          changed = true;
+          updatedFields[key] = submittedData[key];
+        }
+      }
+    });
+
+    if (changed) {
+      chrome.storage.local.set({ updatedFields }, () => {
+        chrome.runtime.sendMessage({ type: 'formChanged' }, () => {
+          form.submit(); // Manually submit the form after processing
+        });
+      });
+    } else {
+      form.submit(); // Manually submit the form if no changes are detected
+    }
+  });
+}
+
+// Attach submit event listeners to forms
+function attachFormSubmitListeners() {
+  const forms = document.querySelectorAll('form');
+  forms.forEach(form => {
+    form.addEventListener('submit', handleFormSubmit);
+  });
+}
+
 // Detect forms and send the field names to the background script
 const formData = detectAndParseForms();
 if (formData.length > 0) {
   chrome.runtime.sendMessage({ type: 'formDetected', formData });
+  attachFormSubmitListeners();
 }
 
 // Listen for data from the background script
