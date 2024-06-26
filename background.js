@@ -9,14 +9,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       console.log('Fields:', fields);
 
       // Send a request to the backend service to get the form data
-      return fetch(`https://run.mocky.io/v3/69cff092-3e3b-4471-b465-9618ca49cd70`, {
+      return fetch(`https://run.mocky.io/v3/105cb5d8-f69d-4d84-825f-83aa952b147b`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       })
-      .then(response => response.json())
+      .then(response => {
+        if (response.status === 401) {
+          chrome.runtime.sendMessage({ type: 'showSignIn' });
+          throw new Error('Unauthorized');
+        }
+        return response.json();
+      })
       .then(data => {
         console.log('Data:', data);
         return { form, formFields: data.formFields };

@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let formFilled = false;
 
   const autofillButton = document.getElementById('autofillButton');
+  const statusDiv = document.getElementById('status');
+  const updateButton = document.getElementById('update');
 
   autofillButton.addEventListener('mouseover', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -37,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  document.getElementById('update').addEventListener('click', () => {
+  updateButton.addEventListener('click', () => {
     chrome.storage.local.get(['updatedFields'], (result) => {
       if (result.updatedFields) {
         fetch('https://your-backend-endpoint', {
@@ -51,11 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(data => {
           console.log('Update response:', data);
-          document.getElementById('status').innerText = 'Form fields updated successfully.';
+          statusDiv.innerText = 'Form fields updated successfully.';
         })
         .catch(error => {
           console.error('Error updating form fields:', error);
-          document.getElementById('status').innerText = 'Error updating form fields.';
+          statusDiv.innerText = 'Error updating form fields.';
         });
       }
     });
@@ -63,9 +65,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'autofillStatus') {
-      document.getElementById('status').innerText = message.status;
+      statusDiv.innerText = message.status;
     } else if (message.type === 'formChanged') {
-      document.getElementById('update').style.display = 'block';
+      updateButton.style.display = 'block';
+    } else if (message.type === 'showSignIn') {
+      showSignInButton();
     }
   });
+
+  function showSignInButton() {
+    autofillButton.style.display = 'none'; // Hide the autofill button
+
+    const signInButton = document.createElement('button');
+    signInButton.innerText = 'Sign In';
+    signInButton.style.width = '100%';
+    signInButton.style.padding = '10px';
+    signInButton.style.margin = '10px 0';
+    signInButton.style.backgroundColor = '#4CAF50';
+    signInButton.style.color = 'white';
+    signInButton.style.border = 'none';
+    signInButton.style.cursor = 'pointer';
+
+    signInButton.addEventListener('click', () => {
+      window.location.href = 'https://your-login-page-url';
+    });
+
+    document.body.appendChild(signInButton);
+  }
 });
