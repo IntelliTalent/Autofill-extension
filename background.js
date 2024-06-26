@@ -9,7 +9,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       console.log('Fields:', fields);
 
       // Send a request to the backend service to get the form data
-      return fetch(`http://185.69.167.159:3000/autofill?${fields}`, {
+      return fetch(`https://run.mocky.io/v3/69cff092-3e3b-4471-b465-9618ca49cd70`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
