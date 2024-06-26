@@ -1,17 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
     let formFilled = false;
-  
-    document.getElementById('approve').addEventListener('mouseover', () => {
-      if (!formFilled) {
-        chrome.storage.local.get(['formData'], (result) => {
-          if (result.formData) {
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-              chrome.tabs.sendMessage(tabs[0].id, { type: 'previewForm', data: result.formData });
-            });
-          }
-        });
-      }
+
+    document.getElementById('startDetection').addEventListener('click', () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          chrome.tabs.sendMessage(tabs[0].id, { type: 'startDetection' });
+      });
     });
+
+    document.getElementById('approve').addEventListener('mouseover', () => {
+        if (!formFilled) {
+            chrome.storage.local.get(['formData'], (result) => {
+                if (result.formData) {
+                    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                        chrome.tabs.sendMessage(tabs[0].id, { type: 'previewForm', data: result.formData });
+                    });
+                }
+            });
+        }
+    });
+  
   
     document.getElementById('approve').addEventListener('mouseout', () => {
       if (!formFilled) {
