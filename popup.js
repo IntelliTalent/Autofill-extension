@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const autofillButton = document.getElementById('autofillButton');
   const statusDiv = document.getElementById('status');
-  const updateButton = document.getElementById('update');
 
   autofillButton.addEventListener('mouseover', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -41,38 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  updateButton.addEventListener('click', () => {
-    chrome.storage.sync.get(['updatedFields'], (result) => {
-      if (result.updatedFields) {
-        chrome.storage.local.get(['token'], (tokenResult) => {
-          const token = tokenResult.token;
-          fetch('http://185.69.167.155:3000/api/v1/autofill', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ data: result.updatedFields })
-          })
-          .then(response => response.json())
-          .then(data => {
-            console.log('Update response:', data);
-            statusDiv.innerText = 'Form fields updated successfully.';
-          })
-          .catch(error => {
-            console.error('Error updating form fields:', error);
-            statusDiv.innerText = 'Error updating form fields.';
-          });
-        });
-      }
-    });
-  });
-
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'autofillStatus') {
       statusDiv.innerText = message.status;
-    } else if (message.type === 'formChanged') {
-      updateButton.style.display = 'block';
     } else if (message.type === 'showSignIn') {
       showSignInForm();
     }
@@ -85,7 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
     signInForm.className = 'form-group';
     signInForm.innerHTML = `
       <input type="email" id="email" name="email" placeholder="Email" required>
-      <input type="password" id="password" name="password" placeholder="Password" required>
+      <div class="password-container">
+        <input type="password" id="password" name="password" placeholder="Password" required>
+        <span class="toggle-password">👁️</span>
+      </div>
       <input type="submit" value="Sign In">
     `;
     signInForm.addEventListener('submit', (event) => {
@@ -109,15 +82,25 @@ document.addEventListener('DOMContentLoaded', () => {
             autofillButton.style.display = 'block'; // Show the autofill button again
           });
         } else {
-          statusDiv.innerText = 'invalid email or password.';
+          statusDiv.innerText = 'Sign-in failed.';
         }
       })
       .catch(error => {
         console.error('Error during sign-in:', error);
-        statusDiv.innerText = 'invalid email or password.';
+        statusDiv.innerText = 'Sign-in failed.';
       });
     });
 
     document.body.appendChild(signInForm);
+
+    // Toggle password visibility
+    const togglePassword = signInForm.querySelector('.toggle-password');
+    const passwordInput = document.getElementById('password');
+
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      togglePassword.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+    });
   }
 });
