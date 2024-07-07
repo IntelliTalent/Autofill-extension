@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.tabs.sendMessage(tabs[0].id, { type: 'startDetection' });
     });
     if (!formFilled) {
-      chrome.storage.local.get(['formData'], (result) => {
+      chrome.storage.sync.get(['formData'], (result) => {
         if (result.formData) {
           chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             chrome.tabs.sendMessage(tabs[0].id, { type: 'previewForm', data: result.formData });
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   autofillButton.addEventListener('click', () => {
-    chrome.storage.local.get(['formData'], (result) => {
+    chrome.storage.sync.get(['formData'], (result) => {
       if (result.formData) {
         formFilled = true;
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -40,13 +40,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   updateButton.addEventListener('click', () => {
-    chrome.storage.local.get(['updatedFields'], (result) => {
+    chrome.storage.sync.get(['updatedFields'], (result) => {
       if (result.updatedFields) {
-        fetch('https://your-backend-endpoint', {
-          method: 'POST',
+        fetch('http://185.69.167.155:3000/api/v1/autofill', {
+          method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer your-token-here`
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({ data: result.updatedFields })
         })
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     signInButton.style.cursor = 'pointer';
 
     signInButton.addEventListener('click', () => {
-      window.location.href = 'https://your-login-page-url';
+      window.location.href = 'http://intelli-talent.tech/auth/sign-in';
     });
 
     document.body.appendChild(signInButton);

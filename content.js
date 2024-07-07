@@ -7,15 +7,15 @@ function detectAndParseForms() {
   let formData = [];
 
   forms.forEach((form, index) => {
-      let formFields = {};
-      const inputs = form.querySelectorAll('input, select, textarea');
+    let formFields = {};
+    const inputs = form.querySelectorAll('input, select, textarea');
 
-      inputs.forEach(input => {
-          const name = input.name || input.id;
-          formFields[name] = input.value || '';
-      });
+    inputs.forEach(input => {
+      const name = input.name || input.id;
+      formFields[name] = input.value || '';
+    });
 
-      formData.push({ form, formFields });
+    formData.push({ form, formFields });
   });
 
   console.log('Detected forms:', formData);
@@ -28,15 +28,15 @@ function fillForms(formData, data) {
   initialFormData = data;
   console.log('Filling forms with data:', data);
   formData.forEach((formObj, idx) => {
-      const { form, formFields } = formObj;
-      for (const key in formFields) {
-          if (data[idx]['formFields'][key] !== undefined) {
-              const input = form.querySelector(`[name="${key}"], [id="${key}"]`);
-              if (input) {
-                  input.value = data[idx]['formFields'][key];
-              }
-          }
+    const { form, formFields } = formObj;
+    for (const key in formFields) {
+      if (data[idx]['formFields'][key] !== undefined) {
+        const input = form.querySelector(`[name="${key}"], [id="${key}"]`);
+        if (input) {
+          input.value = data[idx]['formFields'][key];
+        }
       }
+    }
   });
 }
 
@@ -79,35 +79,16 @@ function handleFormSubmit(event) {
   event.preventDefault(); // Prevent default form submission
   const form = event.target;
   const formData = new FormData(form);
-  let submittedData = {};
+  let updatedFields = {};
 
   formData.forEach((value, key) => {
-    submittedData[key] = value;
+    updatedFields[key] = value;
   });
 
-  chrome.storage.local.get(['formData'], (result) => {
-    const initialData = result.formData;
-    let changed = false;
-    let updatedFields = {};
-
-    initialData.forEach((formObj, idx) => {
-      for (const key in formObj.formFields) {
-        if (submittedData[key] && submittedData[key] !== formObj.formFields[key]) {
-          changed = true;
-          updatedFields[key] = submittedData[key];
-        }
-      }
+  chrome.storage.sync.set({ updatedFields }, () => {
+    chrome.runtime.sendMessage({ type: 'formChanged' }, () => {
+      form.submit(); // Manually submit the form after processing
     });
-
-    if (changed) {
-      chrome.storage.local.set({ updatedFields }, () => {
-        chrome.runtime.sendMessage({ type: 'formChanged' }, () => {
-          form.submit(); // Manually submit the form after processing
-        });
-      });
-    } else {
-      form.submit(); // Manually submit the form if no changes are detected
-    }
   });
 }
 
@@ -129,18 +110,18 @@ if (formData.length > 0) {
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'startDetection') {
-      formData = detectAndParseForms();
-      if (formData.length > 0) {
-          chrome.runtime.sendMessage({ type: 'formDetected', formData });
-          attachFormSubmitListeners();
-      }
+    formData = detectAndParseForms();
+    if (formData.length > 0) {
+      chrome.runtime.sendMessage({ type: 'formDetected', formData });
+      attachFormSubmitListeners();
+    }
   } else if (message.type === 'fillForm') {
-      console.log('Received data:', message.data);
-      fillForms(formData, message.data);
+    console.log('Received data:', message.data);
+    fillForms(formData, message.data);
   } else if (message.type === 'previewForm') {
-      console.log('Preview data:', message.data);
-      previewForm(formData, message.data);
+    console.log('Preview data:', message.data);
+    previewForm(formData, message.data);
   } else if (message.type === 'removePreview') {
-      removePreview(formData);
+    removePreview(formData);
   }
 });
