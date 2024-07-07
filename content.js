@@ -1,3 +1,5 @@
+// content.js
+
 let formFilled = false;
 let initialFormData = {};
 

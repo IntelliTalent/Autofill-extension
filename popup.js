@@ -1,3 +1,5 @@
+// popup.js
+
 document.addEventListener('DOMContentLoaded', () => {
   let formFilled = false;
 
@@ -42,22 +44,25 @@ document.addEventListener('DOMContentLoaded', () => {
   updateButton.addEventListener('click', () => {
     chrome.storage.sync.get(['updatedFields'], (result) => {
       if (result.updatedFields) {
-        fetch('http://185.69.167.155:3000/api/v1/autofill', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ data: result.updatedFields })
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Update response:', data);
-          statusDiv.innerText = 'Form fields updated successfully.';
-        })
-        .catch(error => {
-          console.error('Error updating form fields:', error);
-          statusDiv.innerText = 'Error updating form fields.';
+        chrome.storage.local.get(['token'], (tokenResult) => {
+          const token = tokenResult.token;
+          fetch('http://185.69.167.155:3000/api/v1/autofill', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ data: result.updatedFields })
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('Update response:', data);
+            statusDiv.innerText = 'Form fields updated successfully.';
+          })
+          .catch(error => {
+            console.error('Error updating form fields:', error);
+            statusDiv.innerText = 'Error updating form fields.';
+          });
         });
       }
     });
@@ -69,27 +74,50 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (message.type === 'formChanged') {
       updateButton.style.display = 'block';
     } else if (message.type === 'showSignIn') {
-      showSignInButton();
+      showSignInForm();
     }
   });
 
-  function showSignInButton() {
+  function showSignInForm() {
     autofillButton.style.display = 'none'; // Hide the autofill button
 
-    const signInButton = document.createElement('button');
-    signInButton.innerText = 'Sign In';
-    signInButton.style.width = '100%';
-    signInButton.style.padding = '10px';
-    signInButton.style.margin = '10px 0';
-    signInButton.style.backgroundColor = '#4CAF50';
-    signInButton.style.color = 'white';
-    signInButton.style.border = 'none';
-    signInButton.style.cursor = 'pointer';
+    const signInForm = document.createElement('form');
+    signInForm.className = 'form-group';
+    signInForm.innerHTML = `
+      <input type="email" id="email" name="email" placeholder="Email" required>
+      <input type="password" id="password" name="password" placeholder="Password" required>
+      <input type="submit" value="Sign In">
+    `;
+    signInForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
 
-    signInButton.addEventListener('click', () => {
-      window.location.href = 'http://intelli-talent.tech/auth/sign-in';
+      fetch('http://185.69.167.155:3000/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.token) {
+          chrome.storage.local.set({ token: data.token }, () => {
+            statusDiv.innerText = 'Signed in successfully.';
+            signInForm.remove();
+            autofillButton.style.display = 'block'; // Show the autofill button again
+          });
+        } else {
+          statusDiv.innerText = 'invalid email or password.';
+        }
+      })
+      .catch(error => {
+        console.error('Error during sign-in:', error);
+        statusDiv.innerText = 'invalid email or password.';
+      });
     });
 
-    document.body.appendChild(signInButton);
+    document.body.appendChild(signInForm);
   }
 });
